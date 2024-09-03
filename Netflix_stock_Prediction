@@ -1,0 +1,54 @@
+!pip install pandas
+!pip install numpy
+!pip install scikit-learn
+!pip install matplotlib
+import os
+os.environ['KAGGLE_CONFIG_DIR'] = '/content/'
+
+!kaggle datasets download -d jainilcoder/netflix-stock-price-prediction
+!unzip netflix-stock-price-prediction.zip
+!ls
+import pandas as pd
+
+data = pd.read_csv('NFLX.csv') 
+data.head()
+data.info()
+data.describe()
+data = data[['Date', 'Open', 'Close', 'Volume']]
+data['Date'] = pd.to_datetime(data['Date'])
+import matplotlib.pyplot as plt
+plt.style.use('default')
+plt.figure(figsize=(10,5))
+plt.plot(data['Date'], data['Close'])
+plt.title('Netflix Stock Closing Prices Over Time')
+plt.xlabel('Date')
+plt.ylabel('Closing Price')
+plt.show()
+data = data[['Close']]
+data['Target'] = data['Close'].shift(-1)
+data.dropna(inplace=True)
+from sklearn.model_selection import train_test_split
+
+X = data[['Close']]
+y = data['Target']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+from sklearn.linear_model import LinearRegression
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+predictions = model.predict(X_test)
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import r2_score
+mse = mean_squared_error(y_test, predictions)
+r_squared = r2_score(y_test, predictions)
+print(f'Mean Squared Error: {mse}')
+print(f'R-squared value: {r_squared}')
+plt.figure(figsize=(10,5))
+plt.plot(data['Date'][-len(y_test):], y_test, label='Actual Price')
+plt.plot(data['Date'][-len(y_test):], predictions, label='Predicted Price')
+plt.title('Actual vs Predicted Prices')
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.legend()
+plt.show()
